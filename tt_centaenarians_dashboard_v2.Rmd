@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "TidyTuesday: Verified Oldest People"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -24,11 +24,13 @@ centenarians$death_date <- as.Date(centenarians$death_date)
 centenarians <- centenarians %>%
   mutate(birth_decade = floor_date(birth_date, "10 years"))
 ```
+The oldest known living person is **Maria Branyas** of Spain, aged 116 years, 85 days. The oldest known **living man is Juan Vicente Pérez** of Venezuela, aged 114 years, 1 day. The 100 oldest women have, on average, lived several years longer than the 100 oldest men.
 
-Column {data-width=650}
------------------------------------------------------------------------
+## Column {data-width=550}
 
-### Count of Centenarians by Gender and Decade
+
+### Centenarians by Gender and Decade
+
 
 ```{r}
 centenarians_gender_decade <- centenarians %>%
@@ -41,23 +43,32 @@ plot_gender_decade <- plot_ly(data = centenarians_gender_decade, x = ~decade, y 
   layout(xaxis = list(title = "Decade"), yaxis = list(title = "Count"))
 
 plot_gender_decade
+
+
 ```
 
-### Place of Death or Residence
+### Place of Death or Residence (>1)
+
 
 ```{r}
 centenarians_place <- centenarians %>%
   group_by(place_of_death_or_residence) %>%
   summarise(count = n()) %>%
+  filter(count > 1) %>%
   arrange(desc(count))
 
-plot_place <- plot_ly(data = centenarians_place, x = ~count, y = ~reorder(place_of_death_or_residence, -count), type = "bar") %>%
-  layout(yaxis = list(title = "Place of Death or Residence"), xaxis = list(title = "Count"),
-         title = "Count of Centenarians by Place of Death or Residence") %>%
-  layout(barmode = "stack") %>%
-  layout(xaxis = list(autorange = "reversed"))
+# Define a vector of colors for each category
+color_palette <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf")
+
+plot_place <- plot_ly(data = centenarians_place, x = ~count, y = ~reorder(place_of_death_or_residence, -count),
+                      type = "bar", color = ~place_of_death_or_residence, colors = color_palette) %>%
+  layout(xaxis = list(title = "Count"), yaxis = list(title = "", showticklabels = FALSE)) %>%
+  layout(barmode = "stack", showlegend = TRUE) 
 
 plot_place
+
+
+
 ```
 
 Column {data-width=350}
