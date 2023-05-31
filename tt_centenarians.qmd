@@ -1,0 +1,129 @@
+---
+title: "TidyTuesday Centenarians"
+format: html
+editor: visual
+---
+
+## Quarto
+
+```{r setup}
+library(tidyverse)
+library(janitor)
+library(plotly)
+library(RSQLite)
+library(lubridate)
+```
+```{r}
+rm(list=ls())
+db <- dbConnect(SQLite(), dbname="../DATA/tidytuesday.sqlite3")
+```
+```{r}
+centenarians <- dbGetQuery(db,"SELECT * FROM centenarians;")
+centenarians$birth_date <- as.Date(centenarians$birth_date)
+centenarians$death_date <- as.Date(centenarians$death_date)
+centenarians <- centenarians %>%
+  mutate(birth_decade = floor_date(birth_date, "10 years"))
+
+```
+
+
+```{r}
+centenarians_place <- centenarians %>%
+  group_by(place_of_death_or_residence) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+plot_place <- plot_ly(data = centenarians_place, x = ~count, y = ~reorder(place_of_death_or_residence, -count), type = "bar") %>%
+  layout(yaxis = list(title = "Place of Death or Residence"), xaxis = list(title = "Count"),
+         title = "Count of Centenarians by Place of Death or Residence") %>%
+  layout(barmode = "stack") %>%
+  layout(xaxis = list(autorange = "reversed"))
+
+plot_place
+
+
+```
+```{r}
+centenarians_alive <- centenarians %>%
+  group_by(still_alive) %>%
+  summarise(count = n())
+
+plot_alive <- plot_ly(data = centenarians_alive, x = ~still_alive, y = ~count, type = "bar") %>%
+  layout(xaxis = list(title = "Still Alive"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Alive Status")
+
+plot_alive
+
+```
+```{r}
+centenarians_year <- centenarians %>%
+  mutate(year = year(birth_date)) %>%
+  group_by(year) %>%
+  summarise(yr_count = n()) %>%
+  arrange(desc(year))
+
+plot_year <- plot_ly(data = centenarians_year, x = ~year, y = ~yr_count, type = "scatter", mode = "lines") %>%
+  layout(xaxis = list(title = "Year"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Year")
+
+plot_year
+
+```
+```{r}
+centenarians_decade <- centenarians %>%
+  mutate(decade = floor_date(birth_date, "10 years")) %>%
+  group_by(decade) %>%
+  summarise(decade_count = n()) %>%
+  arrange(desc(decade_count))
+
+plot_decade <- plot_ly(data = centenarians_decade, x = ~decade, y = ~decade_count, type = "bar") %>%
+  layout(xaxis = list(title = "Decade"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Decade")
+
+plot_decade
+
+```
+
+```{r}
+centenarians_gender_decade <- centenarians %>%
+  mutate(decade = floor_date(birth_date, "10 years")) %>%
+  group_by(gender, decade) %>%
+  summarise(decade_count = n()) %>%
+  arrange(desc(decade_count))
+
+plot_gender_decade <- plot_ly(data = centenarians_gender_decade, x = ~decade, y = ~decade_count, type = "bar", color = ~gender) %>%
+  layout(xaxis = list(title = "Decade"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Gender and Decade")
+
+plot_gender_decade
+
+
+```
+```{r}
+centenarians_year <- centenarians %>%
+  mutate(year = year(birth_date)) %>%
+  group_by(year) %>%
+  summarise(yr_count = n()) %>%
+  arrange(desc(year))
+
+plot_year <- plot_ly(data = centenarians_year, x = ~year, y = ~yr_count, type = "scatter", mode = "lines") %>%
+  layout(xaxis = list(title = "Birth Year"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Birth Year")
+
+plot_year
+
+```
+```{r}
+centenarians_gender <- centenarians %>%
+  group_by(gender) %>%
+  summarise(count = n())
+
+plot_gender <- plot_ly(data = centenarians_gender, x = ~gender, y = ~count, type = "bar") %>%
+  layout(xaxis = list(title = "Gender"), yaxis = list(title = "Count"),
+         title = "Count of Centenarians by Gender")
+
+plot_gender
+
+```
+
+
